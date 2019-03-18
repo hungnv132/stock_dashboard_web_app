@@ -3,9 +3,7 @@
         <nav class="sidebar-nav">
           <ul class="nav">
             <li class="nav-item">
-              <a class="nav-link" href="/">
-                <i class="nav-icon icon-speedometer"></i> Dashboard
-              </a>
+                <router-link to="/dashboard" class="nav-link" ><i class="nav-icon icon-speedometer"></i> Dashboard</router-link>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#">
