@@ -11,15 +11,9 @@
               </div>
               <div class="col-sm-7 d-none d-md-block">
                 <div class="btn-group btn-group-toggle float-right mr-3" data-toggle="buttons">
-                  <label class="btn btn-outline-secondary">
-                    <input id="option1" type="radio" name="options" autocomplete="off"> Day
-                  </label>
-                  <label class="btn btn-outline-secondary active">
-                    <input id="option2" type="radio" name="options" autocomplete="off" checked=""> Month
-                  </label>
-                  <label class="btn btn-outline-secondary">
-                    <input id="option3" type="radio" name="options" autocomplete="off"> Year
-                  </label>
+                  <form action="#" @submit="findForeignTradeVolume">
+                    <input  v-model="symbol"  type="text" class="form-control" autocomplete="off"/>
+                  </form>
                 </div>
               </div>
             </div>
@@ -30,9 +24,12 @@
         <div class="row">
           <div class="col-md-6">
               <div class="card">
-                <div class="card-header">Most BUY Volume Today</div>
+                <div class="card-header">
+                  Most BUY Volume Today
+                  <input type="text" id="datepicker">
+                  </div>
                 <div class="card-body">
-                  <VerticalBarChart :height="mostBuyVolumneToday.height" :labels="mostBuyVolumneToday.labels" :datasets="mostBuyVolumneToday.datasets" />
+                  <VerticalBarChart :height="mostBuyVolume.height" :labels="mostBuyVolume.labels" :datasets="mostBuyVolume.datasets" />
                 </div>
               </div>
           </div>
@@ -40,9 +37,7 @@
               <div class="card">
                 <div class="card-header">Most SELL Volume Today</div>
                 <div class="card-body">
-                  <div class="chart-wrapper" style="height:350px;">
-                    <canvas class="chart" id="foreignTradeVolumemost-sell-volume"></canvas>
-                  </div>
+                  <VerticalBarChart :height="mostSellVolume.height" :labels="mostSellVolume.labels" :datasets="mostSellVolume.datasets"/>
                 </div>
               </div>
           </div>
@@ -54,9 +49,7 @@
           <div class="card">
             <div class="card-header">Most BUY in last 30 days</div>
             <div class="card-body">
-              <div class="chart-wrapper" style="min-height:400px;">
-                <canvas class="chart" id="most-buy-30"  style="min-height:400px;">></canvas>
-              </div>
+              <VerticalBarChart :height="totalBuyVolume.height" :labels="totalBuyVolume.labels" :datasets="totalBuyVolume.datasets" />
             </div>
           </div>
         </div>
@@ -80,6 +73,7 @@
 import Vue from 'vue'
 import Chart from 'chart.js';
 import $ from 'jquery';
+import DateRangePicker from 'bootstrap-daterangepicker'
 import axios from 'axios'
 import config from '@/config.js'
 import LineChart from '@/components/LineChart'
@@ -102,25 +96,46 @@ export default {
         labels: [],
         datasets: []
       },
-      mostBuyVolumneToday: {
+      mostBuyVolume: {
         height: 350,
         labels: [],
         datasets: []
-      }
+      },
+      mostSellVolume: {
+        height: 350,
+        labels: [],
+        datasets: []
+      },
+      totalBuyVolume: {
+        height: 350,
+        labels: [],
+        datasets: []
+      },
+      totalSellVolume: {
+        height: 350,
+        labels: [],
+        datasets: []
+      },
     }
   },
   mounted: function() {
     self = this
-    this.getTradeData(this.symbol)
-    this.getMostBuyVolumeToday()
-    this.showMostBuyVolume30Days();
+    $('#datepicker').daterangepicker();
+    this.getForeignTradeVolume(this.symbol);
+    this.statisticizeForeignTradeVolume();
   },
   methods: {
-    getTradeData: function (symbol) {
-      let url = config.api.trade + "?symbol=" + symbol;
+
+    findForeignTradeVolume: function (event) {
+      event.preventDefault()
+      this.getForeignTradeVolume(this.symbol)
+    },
+
+    getForeignTradeVolume: function (symbol) {
+      let url = config.api.trade.replace('{symbol}', symbol);
       axios.get(url)
       .then(function (response) {
-        self.handleForeignTradeVolumne(response.data)
+        self.handleForeignTradeVolumne(response.data);
       })
       .catch(function (error) {
         console.log(error);
@@ -132,9 +147,9 @@ export default {
       let sellVolume = [];
       let labels = [];
       data.forEach(element => {
-        labels.push(element.traded_at)
-        buyVolume.push(element.foreign_buy_volume)
-        sellVolume.push(element.foreign_sell_volume)
+        labels.push(element.traded_at);
+        buyVolume.push(element.foreign_buy_volume);
+        sellVolume.push(element.foreign_sell_volume);
       });
       
       let datasets = [
@@ -147,27 +162,116 @@ export default {
           borderColor: 'green',
           data: buyVolume
         }]
-        Vue.set(self.foreignTradeVolume, 'labels', labels)
-        this.$set(self.foreignTradeVolume, 'datasets', datasets)
+        Vue.set(self.foreignTradeVolume, 'labels', labels);
+        this.$set(self.foreignTradeVolume, 'datasets', datasets);
     },
 
-    getMostBuyVolumeToday: function() {
-      let labels = ['VNM', 'VCB', 'SHB', 'VNM', 'VCB', 'SHB', 'VNM', 'VCB', 'SHB', 'VNM', 'VCB', 'SHB', 'VNM', 'VCB', 'SHB', 'VNM', 'VCB', 'SHB', 'VNM', 'VCB', 'SHB', ]
+    statisticizeForeignTradeVolume: function () {
+      let url = config.api.statistic.foreignTradeVolume;
+      axios.get(url + "?order=-total_buy_volume&start_date=25/03/2019")
+      .then(function (response) {
+        self.getMostBuyVolume(response.data)
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+
+      axios.get(url + "?order=-total_sell_volume&start_date=25/03/2019")
+      .then(function (response) {
+        self.getMostSellVolume(response.data)
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+
+      axios.get(url + "?order=-total_buy_volume&start_date=01/03/2019")
+      .then(function (response) {
+        self.getTotalBuyVolume(response.data)
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+    },
+
+    getMostBuyVolume: function(data) {
+      let labels = [];
+      let buyVolume = [];
+      let sellVolume = [];
+
+      data.forEach(element => {
+        labels.push(element.symbol);
+        buyVolume.push(element.total_buy_volume);
+        sellVolume.push(element.total_sell_volume * -1);
+      });
+
       let datasets = [
         {
           label: 'Buy Volume',
-          backgroundColor: 'blue',
-          data: [10, 12, 30, 2, 10, 10, 12, 30, 2, 10,10, 12, 30, 2, 10,100, 12, 30, 2, 10,]
+          backgroundColor: 'green',
+          data: buyVolume
         },
         {
           label: 'Sell Volume',
           backgroundColor: 'red',
-          data: [-3, -12, -90, -2, -10, -10, -12, -30, -2, -10,-10, -12, -30, -2, -10,-10, -12, -30, -2, -10,]
+          data: sellVolume
         }
       ]
-      this.$set(self.mostBuyVolumneToday, 'labels', labels)
-      this.$set(self.mostBuyVolumneToday, 'datasets', datasets)
+      this.$set(self.mostBuyVolume, 'labels', labels)
+      this.$set(self.mostBuyVolume, 'datasets', datasets)
+    },
 
+    getMostSellVolume: function(data) {
+      let labels = [];
+      let buyVolume = [];
+      let sellVolume = [];
+
+      data.forEach(element => {
+        labels.push(element.symbol);
+        buyVolume.push(element.total_buy_volume * -1);
+        sellVolume.push(element.total_sell_volume);
+      });
+
+      let datasets = [
+        {
+          label: 'Buy Volume',
+          backgroundColor: 'green',
+          data: buyVolume
+        },
+        {
+          label: 'Sell Volume',
+          backgroundColor: 'red',
+          data: sellVolume
+        }
+      ]
+      this.$set(self.mostSellVolume, 'labels', labels)
+      this.$set(self.mostSellVolume, 'datasets', datasets)
+    },
+
+    getTotalBuyVolume: function (data) {
+      let labels = [];
+      let buyVolume = [];
+      let sellVolume = [];
+
+      data.forEach(element => {
+        labels.push(element.symbol);
+        buyVolume.push(element.total_buy_volume);
+        sellVolume.push(element.total_sell_volume * -1);
+      });
+
+      let datasets = [
+        {
+          label: 'Buy Volume',
+          backgroundColor: 'green',
+          data: buyVolume
+        },
+        {
+          label: 'Sell Volume',
+          backgroundColor: 'red',
+          data: sellVolume
+        }
+      ]
+      this.$set(self.totalBuyVolume, 'labels', labels)
+      this.$set(self.totalBuyVolume, 'datasets', datasets)
     },
 
     showMostBuyVolume30Days: function () {
@@ -221,3 +325,7 @@ export default {
 
 }
 </script>
+<style lang="scss" scoped>
+@import '../../node_modules/bootstrap-daterangepicker/daterangepicker.css'
+</style>
+

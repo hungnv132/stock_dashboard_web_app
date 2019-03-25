@@ -4,6 +4,10 @@ if (process.env.NODE_ENV == 'production'){
 }
 export default {
     api: {
-        trade: host + '/api/v1/trades/'
+        company: host + '/api/v1/companies/',
+        trade: host + '/api/v1/companies/{symbol}/trades/',
+        statistic: {
+            foreignTradeVolume: host + '/api/v1/statistics/foreign-trade-volume/',
+        }
     }
 }

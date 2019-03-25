@@ -1,13 +1,11 @@
 <template>
     <div class="chart-wrapper" :style="chartHeight">
-        <canvas class="chart" ref="barChartCanvas" :height="height"></canvas>
+        <canvas class="chart" ref="verticalBarChartCanvas" :height="height" :id="id"></canvas>
     </div>
 </template>
 <script>
 import  Chart from 'chart.js';
 
-var chart;
-var self;
 
 export default {
   name: 'LineChart',
@@ -15,6 +13,7 @@ export default {
     height: Number,
     labels: Array,
     datasets: Array,
+    id: String,
   },
 
   data: function () {
@@ -44,14 +43,6 @@ export default {
     },
   },
 
-  mounted: function () {
-    self = this
-    chart = new Chart(this.$refs.barChartCanvas, {
-      type: self.type,
-      options: self.options,
-    });
-  },
-
   watch: {
     labels: function () {
       this.renderChart()
@@ -60,6 +51,11 @@ export default {
 
   methods: {
     renderChart: function () {
+      let self = this
+      let chart = new Chart(this.$refs.verticalBarChartCanvas, {
+        type: self.type,
+        options: self.options,
+      });
       // apply data, labels to the chart
       chart.data.labels = this.labels;
       this.datasets.forEach(element => {

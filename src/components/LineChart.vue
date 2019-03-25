@@ -5,7 +5,6 @@
 </template>
 <script>
 import  Chart from 'chart.js';
-var chart;
 var self;
 
 export default {
@@ -18,7 +17,7 @@ export default {
 
   data: function () {
     return {
-      chartType: 'line',
+      type: 'line',
       options: {
           maintainAspectRatio: false,
           legend: {
@@ -62,10 +61,6 @@ export default {
 
   mounted: function () {
     self = this
-    chart = new Chart(this.$refs.lineChartCanvas, {
-      type: self.chartType,
-      options: self.options,
-    });
   },
 
   watch: {
@@ -76,6 +71,10 @@ export default {
 
   methods: {
     renderChart: function () {
+      let chart = new Chart(this.$refs.lineChartCanvas, {
+        type: self.type,
+        options: self.options,
+      });
       // apply data, labels to the chart
       chart.data.labels = this.labels;
       this.datasets.forEach(element => {
