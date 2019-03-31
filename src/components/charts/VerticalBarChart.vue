@@ -1,11 +1,11 @@
 <template>
     <div class="chart-wrapper" :style="chartHeight">
-        <canvas class="chart" ref="verticalBarChartCanvas" :height="height" :id="id"></canvas>
+        <canvas class="chart" ref="verticalBarChartCanvas" :height="height" :id="'verticalBarChartCanvas' + id"></canvas>
     </div>
 </template>
 <script>
-import  Chart from 'chart.js';
-
+import Chart from 'chart.js';
+import $ from 'jquery'
 
 export default {
   name: 'LineChart',
@@ -18,6 +18,7 @@ export default {
 
   data: function () {
     return {
+      chart: '',
       type: 'bar',
       options: {
         tooltips: {
@@ -52,7 +53,11 @@ export default {
   methods: {
     renderChart: function () {
       let self = this
-      let chart = new Chart(this.$refs.verticalBarChartCanvas, {
+      // let element = this.$refs['verticalBarChartCanvas' + this.id]
+      console.log("vertical " + this.id)
+      let name = '#verticalBarChartCanvas' + this.id;
+      console.log(name)
+      this.chart = new Chart(this.refs.verticalBarChartCanvas, {
         type: self.type,
         options: self.options,
       });
